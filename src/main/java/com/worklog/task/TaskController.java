@@ -75,6 +75,14 @@ public class TaskController {
 		return taskService.updateTask(id, memberId, request);
 	}
 
+	// DELETE /api/tasks/{id}/permanent : 보관한 업무를 영구 삭제 (성과·진행 메모도 함께, 되돌릴 수 없음)
+	@DeleteMapping("/{id}/permanent")
+	public ResponseEntity<Void> deleteTaskPermanently(@PathVariable Long id,
+			@AuthenticationPrincipal Long memberId) {
+		taskService.deleteTaskPermanently(id, memberId);
+		return ResponseEntity.noContent().build();
+	}
+
 	// POST /api/tasks/{id}/restore : 보관한 업무 복구
 	@PostMapping("/{id}/restore")
 	public TaskResponse restoreTask(@PathVariable Long id, @AuthenticationPrincipal Long memberId) {

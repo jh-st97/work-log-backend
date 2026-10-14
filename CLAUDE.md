@@ -423,9 +423,17 @@ CORS까지 포함해 기획서 1단계(회원가입, 로그인, JWT 인증, 에�
 - 테스트: `ArchiveRestoreServiceTest`(7), `ArchiveRestoreControllerTest`(4) + `TaskServiceTest` 호출부 수정. 전체 통과. 프론트까지 실제 브라우저로 보관→보관함→복구, 프로젝트 보관 중 업무 복구 차단 메시지, 프로젝트 복구까지 확인.
 - [도구 참고] `./mvnw -q test-compile`이 메서드 시그니처가 바뀐 뒤에도 에러 없이 끝난 적이 있음(증분 컴파일이 테스트를 다시 안 컴파일). 호출부를 직접 확인하거나 테스트 파일을 `touch`해서 다시 컴파일시킬 것. Vite 개발 서버가 또 수정을 놓쳐서(`curl`로 `?t=` 없이 받은 결과가 낡음) 껐다 켬.
 
-### 다음 할 일 (사용자 요청, 2026-10-06)
-- **보관함에서 영구 삭제**(물리 삭제)를 만들 것. 정할 것: 업무를 지우면 딸린 성과 항목·진행 메모·태그/시스템 연결도 같이 지워야 함(FK). 프로젝트를 영구 삭제할 때 그 안의 업무까지 전부 지울지 vs 업무가 남아 있으면 막을지 사용자에게 물어볼 것. 영구 삭제는 되돌릴 수 없으니 확인창을 보관 때보다 강하게.
-- 지금 DB에 쌓인 시험 데이터(보관함의 `pagination test 0~18`, `archive-test-*`, `diag test edit2`, `디버그 테스트` 등)는 영구 삭제 기능이 생기면 화면에서 정리할 예정.
+### 완료 (2026-10-14, 보관함에서 영구 삭제)
+- **결정(사용자)**: 프로젝트는 **업무가 하나라도 남아 있으면(보관한 업무 포함) 막기**(409 `PROJECT_HAS_TASKS`), 확인은 **확인창 + 강한 경고 문구**(이름 타이핑 방식 아님).
+- API: `DELETE /api/tasks/{id}/permanent`, `DELETE /api/projects/{id}/permanent`(기존 `DELETE /api/tasks/{id}`는 보관이라 경로로 구분). **보관한 항목만** 영구 삭제 가능(아니면 409 `NOT_ARCHIVED`), 남의 것은 403.
+- 업무 영구 삭제(`TaskService.deleteTaskPermanently`): 성과 항목·진행 메모·태그 연결·시스템 연결을 먼저 지우고 `flush()` 후 업무 삭제(FK 순서). **일일 기록(회고 자리)과 태그·시스템 자체는 남김.** `TaskResultRepository.deleteByTaskId`, `TaskLogRepository.deleteByTaskId`, `TaskRepository.existsByProjectId` 추가. `TaskService` 생성자에 `TaskResultRepository`, `TaskLogRepository`가 주입됨.
+- 프로젝트 영구 삭제(`ProjectService.deleteProjectPermanently`): `TaskRepository`를 주입받아 업무 존재 여부 확인.
+- 테스트: `PermanentDeleteServiceTest`(6), `PermanentDeleteControllerTest`(3). 전체 통과(약 75개). 프론트까지 브라우저로 확인: 업무 남은 프로젝트 삭제 차단 안내, 성과·메모가 달린 업무 삭제, 업무 삭제 후 프로젝트 삭제, 일일 기록 보존(메모만 사라짐). 사용자도 직접 시험 데이터를 정리하며 확인.
+- 프론트는 보관함 카드에 "영구 삭제" 버튼과 경고 확인창(업무: 성과·진행 메모도 함께 사라짐 안내, 프로젝트: 업무가 남으면 삭제 안 됨 안내). 자세한 건 프론트 CLAUDE.md.
+
+### 다음 할 일
+- 알림(저녁 기록·마감일): 사용자가 "나중에 생각할게"라고 보류 중. 정할 것: 디스코드/슬랙, 웹훅 주소 설정 위치(환경변수 vs 회원별), 시각(저녁 21:00 / 마감일 09:00 제안).
+- GitHub 연동, Docker·CI, `LEARNING_NOTES.md` 커밋, 저장소 이름 변경, README 스크린샷.
 
 ### 다음 단계
 - 기획서 1~5단계 완료. 남은 것은 아래 "미뤄둔 것"과 기획서의 "이후" 기능(보관 항목 복구, 알림, 이력서용 내보내기, GitHub 연동, Docker·CI).

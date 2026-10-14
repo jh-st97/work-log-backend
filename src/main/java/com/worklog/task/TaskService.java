@@ -23,6 +23,7 @@ import com.worklog.tag.dto.TagResponse;
 import com.worklog.task.dto.TaskRequest;
 import com.worklog.task.dto.TaskResponse;
 import com.worklog.task.dto.TaskStatusRequest;
+import com.worklog.tasklog.TaskLogRepository;
 import com.worklog.worksystem.WorkSystem;
 import com.worklog.worksystem.WorkSystemRepository;
 import com.worklog.worksystem.dto.WorkSystemResponse;
@@ -37,11 +38,16 @@ public class TaskService {
 	private final ProjectRepository projectRepository;
 	private final TagRepository tagRepository;
 	private final WorkSystemRepository workSystemRepository;
+	private final TaskResultRepository taskResultRepository;
+	private final TaskLogRepository taskLogRepository;
 
 	public TaskService(TaskRepository taskRepository, TaskTagRepository taskTagRepository,
 			TaskWorkSystemRepository taskWorkSystemRepository, MemberRepository memberRepository,
 			ProjectRepository projectRepository, TagRepository tagRepository,
-			WorkSystemRepository workSystemRepository) {
+			WorkSystemRepository workSystemRepository, TaskResultRepository taskResultRepository,
+			TaskLogRepository taskLogRepository) {
+		this.taskResultRepository = taskResultRepository;
+		this.taskLogRepository = taskLogRepository;
 		this.taskRepository = taskRepository;
 		this.taskTagRepository = taskTagRepository;
 		this.taskWorkSystemRepository = taskWorkSystemRepository;
@@ -140,6 +146,27 @@ public class TaskService {
 	public void archiveTask(Long id, Long memberId) {
 		Task task = findMyTask(id, memberId);
 		task.archive();
+	}
+
+	// 보관한 업무를 영구 삭제한다(되돌릴 수 없음). 보관하지 않은 업무는 실수로 지우지 못하게 막는다.
+	// 이 업무에 딸린 성과 항목·진행 메모·태그/시스템 연결은 FK 때문에 먼저 지워야 한다.
+	// 진행 메모가 붙어 있던 일일 기록(회고)은 그대로 남는다.
+	// 삭제 순서가 어긋나지 않게 자식을 지울 때마다 flush()로 바로 DB에 반영한다.
+	@Transactional
+	public void deleteTaskPermanently(Long id, Long memberId) {
+		Task task = findMyTask(id, memberId);
+
+		if (!task.isArchived()) {
+			throw new BusinessException(ErrorCode.NOT_ARCHIVED);
+		}
+
+		taskResultRepository.deleteByTaskId(id);
+		taskLogRepository.deleteByTaskId(id);
+		taskTagRepository.deleteByTaskId(id);
+		taskWorkSystemRepository.deleteByTaskId(id);
+		taskRepository.flush();
+
+		taskRepository.delete(task);
 	}
 
 	// 보관한 업무를 되살린다. 속한 프로젝트가 아직 보관 중이면 되살려도 목록에 안 보이는

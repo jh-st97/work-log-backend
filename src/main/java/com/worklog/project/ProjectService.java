@@ -11,16 +11,20 @@ import com.worklog.member.Member;
 import com.worklog.member.MemberRepository;
 import com.worklog.project.dto.ProjectRequest;
 import com.worklog.project.dto.ProjectResponse;
+import com.worklog.task.TaskRepository;
 
 @Service
 public class ProjectService {
 
 	private final ProjectRepository projectRepository;
 	private final MemberRepository memberRepository;
+	private final TaskRepository taskRepository;
 
-	public ProjectService(ProjectRepository projectRepository, MemberRepository memberRepository) {
+	public ProjectService(ProjectRepository projectRepository, MemberRepository memberRepository,
+			TaskRepository taskRepository) {
 		this.projectRepository = projectRepository;
 		this.memberRepository = memberRepository;
+		this.taskRepository = taskRepository;
 	}
 
 	// 내 프로젝트 목록 조회. archived가 false면 보관 안 된 것, true면 보관한 것(보관함)만.
@@ -75,6 +79,23 @@ public class ProjectService {
 		Project project = findMyProject(id, memberId);
 		project.restore();
 		return ProjectResponse.from(project);
+	}
+
+	// 보관한 프로젝트를 영구 삭제한다(되돌릴 수 없음). 보관하지 않은 프로젝트는 막는다.
+	// 그 프로젝트에 업무가 하나라도 남아 있으면(보관한 업무 포함) 업무와 이력서 재료가 한꺼번에
+	// 사라지는 사고를 막으려고 삭제를 거부한다. 업무를 먼저 영구 삭제해야 한다.
+	@Transactional
+	public void deleteProjectPermanently(Long id, Long memberId) {
+		Project project = findMyProject(id, memberId);
+
+		if (!project.isArchived()) {
+			throw new BusinessException(ErrorCode.NOT_ARCHIVED);
+		}
+		if (taskRepository.existsByProjectId(id)) {
+			throw new BusinessException(ErrorCode.PROJECT_HAS_TASKS);
+		}
+
+		projectRepository.delete(project);
 	}
 
 	// 프로젝트를 찾고, 그게 진짜 내 것인지까지 확인하는 공통 로직

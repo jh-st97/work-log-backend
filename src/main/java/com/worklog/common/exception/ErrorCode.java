@@ -24,6 +24,8 @@ public enum ErrorCode {
 	TASK_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 진행 메모입니다."),
 	TASK_LOG_ACCESS_DENIED(HttpStatus.FORBIDDEN, "이 진행 메모에 접근할 권한이 없습니다."),
 	PROJECT_ARCHIVED(HttpStatus.CONFLICT, "프로젝트가 보관 중입니다. 프로젝트를 먼저 복구해 주세요."),
+	NOT_ARCHIVED(HttpStatus.CONFLICT, "보관한 항목만 영구 삭제할 수 있습니다. 먼저 보관해 주세요."),
+	PROJECT_HAS_TASKS(HttpStatus.CONFLICT, "프로젝트에 업무가 남아 있어 영구 삭제할 수 없습니다. 업무를 먼저 영구 삭제해 주세요."),
 	RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 주소를 찾을 수 없습니다."),
 	METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "지원하지 않는 요청 방식입니다."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");

@@ -23,7 +23,8 @@
 
 - 상태: 예정 / 진행 / 완료
 - 우선순위, 마감일
-- 삭제 대신 보관 처리 (보관함에서 복구 가능)
+- 삭제 대신 보관 처리 (보관함에서 복구하거나 영구 삭제 가능)
+- 영구 삭제는 보관한 항목만 가능하고, 업무가 남은 프로젝트는 삭제되지 않음
 - 프로젝트를 보관하면 그 안의 업무도 목록에서 함께 숨김
 
 **기술 태그 · 업무 시스템**
@@ -190,6 +191,7 @@ H2 같은 메모리 DB 대신 실제 PostgreSQL을 쓴 이유는 다음과 같�
 - `PATCH /api/projects/{id}` 수정
 - `DELETE /api/projects/{id}` 보관 처리
 - `POST /api/projects/{id}/restore` 보관 복구
+- `DELETE /api/projects/{id}/permanent` 영구 삭제 (보관한 프로젝트만, 업무가 남아 있으면 409)
 
 **태그**
 
@@ -214,6 +216,7 @@ H2 같은 메모리 DB 대신 실제 PostgreSQL을 쓴 이유는 다음과 같�
 - `PATCH /api/tasks/{id}/status` 상태 변경
 - `DELETE /api/tasks/{id}` 보관 처리
 - `POST /api/tasks/{id}/restore` 보관 복구 (프로젝트가 보관 중이면 409)
+- `DELETE /api/tasks/{id}/permanent` 영구 삭제 (보관한 업무만, 성과·진행 메모도 함께)
 
 **성과 항목**
 
@@ -291,6 +294,5 @@ QueryDSL은 빌드 설정이 무겁고, 문자열 JPQL 조립은 조건이 늘�
 ## 앞으로 할 일
 
 - Refresh Token (현재는 만료되면 다시 로그인)
-- 보관함에서 영구 삭제
 - 알림(저녁 기록, 마감일)
 - Docker, GitHub Actions

@@ -41,6 +41,14 @@ public class ProjectController {
 		return projectService.getProjects(memberId, archived, pageable);
 	}
 
+	// DELETE /api/projects/{id}/permanent : 보관한 프로젝트를 영구 삭제 (되돌릴 수 없음)
+	@DeleteMapping("/{id}/permanent")
+	public ResponseEntity<Void> deleteProjectPermanently(@PathVariable Long id,
+			@AuthenticationPrincipal Long memberId) {
+		projectService.deleteProjectPermanently(id, memberId);
+		return ResponseEntity.noContent().build();
+	}
+
 	// POST /api/projects/{id}/restore : 보관한 프로젝트 복구
 	@PostMapping("/{id}/restore")
 	public ProjectResponse restoreProject(@PathVariable Long id, @AuthenticationPrincipal Long memberId) {
