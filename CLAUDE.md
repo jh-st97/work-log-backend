@@ -245,8 +245,8 @@ API는 7개 리소스, 32개 엔드포인트로 구성하고, 인증은 Access T
 - 패키지는 도메인별로 구성한다(`common`, `config`, `member`, `auth`, `security`, 하위 `dto`, `common/exception`).
 - `member` 테이블은 사용자가 SQL로 직접 만들었고, `application.yml`의 `ddl-auto`는 `validate`다(엔티티와 테이블이 맞는지 검사만 하고 자동으로 만들지 않음).
 - 이 프로젝트는 `spring-boot-starter-webmvc`를 쓰는 Spring Boot 4 구성이라 **Jackson(`ObjectMapper`)이 기본 포함되지 않는다.** 필터 단계 등 Jackson이 필요해 보이는 곳에서는 라이브러리를 추가하기보다 간단한 문자열 조립으로 대체했다(예: `JwtAuthenticationEntryPoint`).
-- GitHub 저장소: https://github.com/jh-st97/work-log (Public). STS(EGit)에서 Team → Commit, Team → Push to Upstream(원격 `origin`으로 고정 저장됨)으로 관리한다. 원격 연결 후 최초 1회는 "Push Branch main" 화면에서 URI·계정·토큰을 입력해 `origin`으로 저장해 둬야 다음부터 재입력 없이 push된다.
-- **저장소 이름을 `work-log`에서 `work-log-backend`로 바꿀 예정(2026-09-22 결정, 아직 실행 안 함).** 바꾸면 이 문서의 주소와 로컬 STS의 원격 URL도 같이 고쳐야 한다.
+- GitHub 저장소: https://github.com/jh-st97/work-log-backend (Public, 2026-10-14에 `work-log`에서 이름 변경 — 로컬 `origin` 주소도 새 주소로 바꿈). STS(EGit)에서 Team → Commit, Team → Push to Upstream(원격 `origin`으로 고정 저장됨)으로 관리한다. 원격 연결 후 최초 1회는 "Push Branch main" 화면에서 URI·계정·토큰을 입력해 `origin`으로 저장해 둬야 다음부터 재입력 없이 push된다.
+- 저장소 이름을 `work-log`에서 `work-log-backend`로 바꿨다(2026-10-14). GitHub 웹에서 이름을 바꾸고 `git remote set-url origin https://github.com/jh-st97/work-log-backend.git`로 로컬 주소를 갱신. `gh` CLI는 이 PC에 없어서 GitHub 이름 변경은 웹에서 해야 함.
 - 프론트엔드 프로젝트가 별도로 생겼다: `C:\workspace\side-projects\work-log\work-log-frontend` (React + TypeScript + Vite). 자세한 내용은 그 프로젝트의 CLAUDE.md 참고. GitHub: https://github.com/jh-st97/work-log-frontend
 
 ### 완료 (2026-09-21~22, 기획서 1단계 대부분)
@@ -378,7 +378,7 @@ CORS까지 포함해 기획서 1단계(회원가입, 로그인, JWT 인증, 에�
 - **README 서식 규칙(사용자 요청): 표를 쓰지 않고 목록으로 쓰며, 문단은 문장마다 줄을 나눈다.** 사용자의 화면에서 표가 안 보이고, 표 한 칸에 설명이 길게 이어지는 걸 불편해함. README를 고칠 때도 이 방식을 유지할 것. (CLAUDE.md는 Claude가 읽는 파일이라 표를 써도 됨.)
 - 스크린샷은 뺌(Claude 브라우저 캡처가 불안정). 나중에 직접 찍어서 `docs/`에 넣고 README에 추가할 수 있음.
 - 미확인: README의 N+1 쿼리 개수(`1 + 2N` → 고정 3개)는 계산한 값이고 쿼리 로그로 직접 센 건 아님. 면접에서 숫자를 말할 거면 `show-sql` 로그로 확인할 것.
-- 저장소 이름을 `work-log-backend`로 바꾸면 두 README의 링크(`github.com/jh-st97/work-log`)도 같이 고칠 것.
+- 저장소 이름 변경에 맞춰 프론트 README의 링크를 `work-log-backend`로 고침(2026-10-14).
 
 ### 완료 (2026-10-06, 기획서 5단계 — 컨트롤러 통합 테스트)
 - `support/ControllerTestSupport`(`@SpringBootTest` + `@AutoConfigureMockMvc`): `MockMvc`로 서버를 띄우지 않고 보안 필터(JWT)·컨트롤러·서비스·DB를 전부 거치는 요청을 보냄. 도우미 `signupAndLogin(email)`(토큰 반환), `createProject`, `createTask`, `bearer(token)`. Spring Boot 4라서 어노테이션 패키지가 `org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc`임(Boot 3과 다름). JSON 응답은 `com.jayway.jsonpath.JsonPath`로 읽음(Jackson `ObjectMapper` 안 씀). 요청 본문은 문자열로 직접 조립(ASCII만 써서 인코딩 문제 회피). 한글 메시지는 단언하지 않고 `code`만 확인.
